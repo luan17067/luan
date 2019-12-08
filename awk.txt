@@ -1,0 +1,246 @@
+正则符号
+\	转义符，将特殊字符进行转义，忽略其特殊意义a\.b匹配a.b，但不能匹配ajb，.被转义为特殊意义
+^	匹配行首，awk中，^则是匹配字符串的开始^tux匹配以tux开头的行
+$	匹配行尾，awk中，$则是匹配字符串的结尾tux$匹配以tux结尾的行
+.	匹配除换行符\n之外的任意单个字符，awk则中可以ab.匹配abc或bad，不可匹配abcd或abde，只能匹配单字符
+[ ]	匹配包含在[字符]之中的任意一个字符coo[kl]可以匹配cook或cool
+[^]	匹配[^字符]之外的任意一个字符123[^45]不可以匹配1234或1235，1236、1237都可以
+[-]	匹配[]中指定范围内的任意一个字符，要写成递增[0-9]可以匹配1、2或3等其中任意一个数字
+?	匹配之前的项1次或者0次colou?r可以匹配color或者colour，不能匹配colouur
++	匹配之前的项1次或者多次sa-6+匹配sa-6、sa-666，不能匹配sa-
+*	匹配之前的项0次或者多次co*l匹配cl、col、cool、coool等
+()	匹配表达式，创建一个用于匹配的子串ma(tri)?匹配max或maxtrix
+{n}	匹配之前的项n次，n是可以为0的正整数[0-9]{3}匹配任意一个三位数，可以扩展为
+{n,}	之前的项至少需要匹配n次[0-9]{2,}匹配任意一个两位数或更多位数
+{n,m}	指定之前的项至少匹配n次，最多匹配m次，n<=m[0-9]{2,5}匹配从两位数到五位数之间的任意一个数字
+	|交替匹配|两边的任意一项ab(c|d)匹配abc或abd
+&	保存查找串以便在替换串中引用s/my/**&**/  符号&代表查找串。my将被替换为**my**
+
+扩展正则
++	+匹配之前的项1次或者多次sa-6+匹配sa-6、sa-666，不能匹配sa-
+?	匹配之前的项1次或者0次colou?r可以匹配color或者colour，不能匹配colouur
+|      或者     grep -E "root|bin" /etc/passwd 或者 egrep "root|bin" /etc/passwd
+()    组合为整体,保留 egrep "(0:){2}" /etc/passwd egerp "^(root|bin)" /etc/passwd
+{n,m} 匹配n到m次 egrep "o{1,2}" user /etc/passwd
+\b  单词边界  egrep "\bthe\b" /etc/passwd
+
+基本正则例子:
+grep ^root user            查找以root开头的行
+grep bash$ user            查找以bash结尾的行
+grep [rnt] user            查找有字母r或n或t的行
+grep [^rnt] user           查找除字母r或n或t的行
+grep r. user	        查找有r后面跟一个任意字符的行
+grep ro* user	         查找r后面有任意个o的行
+grep . user		         查找任意单个字符,包括空格
+grep .* user	         查找任意,包括空行
+grep "ro\{1,3\}" user       查找以r开头后面跟了1到3个o的行
+grep "ro\{2\}" user		查找以r开头后面跟了2个o的行
+grep "ro\{2,\}" user	   查找以r开头后面跟了2个以及2个以上o的行
+grep "ro*" user            查找以r开头后面有没有o都行的行
+grep "\(0:\)\{2\}" user	   查找0:出现了连续2次的行
+grep -w 'inet' //精确匹配inet
+扩展正则,需要使用grep -E或者 egrep
+egrep "root|bin" user     扩展正则,查找root或者bin的行
+egrep "ro{1,3}" user      扩展正则,查找以r开头后面跟了1到3个o的行
+egrep "(0:){2}" user       扩展正则,查找0:出现了连续2次的行
+egrep "^root|^bin" user    扩展正则,查找以root或者bin开头的行
+egrep "^(root|bin)" user   组合应用,查找以root或者bin开头的行
+egrep "o+" user		   
+egrep "o{0,1}" user	   1-2个o的行
+egrep "o?" user		   
+
+
+sed 流式编辑器,能够实现对文本交互式的增删改查,逐行处理使用方法
+第一种方法:前置命令 | sed 选项 (定址符)指令
+第二种方法:sed 选项 (定址符)指令 文档
+选项:-n屏蔽默认输出 -r支持扩展正则 -i写入文件
+条件:/正则/	行号
+指令: p输出文档内容 d删除 s替换 a行下添加 i行上添加 c替换整行
+
+
+例子:
+ifconfig | sed -n '1,3p'  输出ifconfig命令结果1-3行
+ifconfig | sed -n '1p;3p' 输出ifconfig命令结果1和3行
+sed 'p' user	       输出所有文档的内容,默认再多输出一遍
+sed -n  'p' user	       输出所有文档的内容, 没有默认的输出
+sed -n  '1p' user         输出文档的第一行
+sed -n  '1,3p' user       输出1~3行
+sed -n  '2,5p' user       输出2~5行
+sed -n  '2p;5p' user      输出第2行和第5行
+sed -n  '2,+1p' user      输出第二行以及后面的1行
+sed -n  '3,+2p' user      输出第3行以及后面的2行
+sed -n  '1~2p' user        输出第1行之后每间隔一行再输出
+sed -n  '2~2p' user	  输出第2行之后每间隔一行再输出
+sed -n '/^root/p' user    使用正则输出root开头的行
+sed -n '/bash$/p' user    使用正则输出bash结尾的行
+sed -nr '/root|bin/p' user  输出有root或者bin的行
+sed -n '=' user		  查看行号
+sed -n '$=' user           查看最后一行行号
+sed -n '$p' user           查看最后一行
+
+sed '1d' user		  删除第一行
+sed '1,3d' user	 	  删除1~3行
+sed '3,+2d' user	         删除第3行以及后面2行
+sed '1d;5d' user	         删除第一行和第5行
+----------------------
+sed 's/old/new/'   替换
+sed 's/2017/XXXX/' test     替换所有行的第一个2017为XXXX
+sed 's/2017/XXXX/2' test    替换所有行的第2个
+sed 's/2017/XXXX/3' test    替换所有行的第3个
+sed '1s/2017/XXXX/' test    替换第1行的第一个2017
+sed '2s/2017/XXXX/2' test   替换第2行的第2个2017
+sed 's/2017/XXXX/g' test    替换所有行的所有2017
+sed 's//bin/bash//sbin/sh/' user    报错
+sed 's/\/bin\/bash/\/sbin\/sh/' user   成功,但不好用
+sed 's#/bin/bash#/sbin/sh#' user   修改替换符号,最佳方案
+sed 's@/bin/bash@/sbin/sh@' user
+sed 's/.//2;s/.$//' nssw           删除文本中每行的第2个字符与最后一个字符
+sed  "1s/^/ /" test1.txt 第一行行首加空格
+sed  "1s/^/#/" test1.txt 第一行行首加#
+---------------------
+将第一个字符和最后一个字符替换
+sed -r 's/(a)(b)(c)/\1\2\3/' abc    保留之后按原顺序粘贴
+sed -r 's/(a)(b)(c)/\3\2\1/' abc	更换顺序
+sed -r 's/(.)(.)(.)/\3\2\1/' abc	使用正则符号增加匹配范围
+sed -r 's/^(.)(.*)(.)$/\3\2\1/' abc   最后版本
+sed -r 's/^(.)(.*)(.)$/\3\2\1/' nssw 
+
+删除所有行的所有数字
+sed 's/[0-9]//g' nssw 
+将所有行的所有大写字母添加括号
+sed -r 's/([A-Z])/{\1}/g' nssw 
+sed 'i 888' user	              所有行上添加888
+sed '1i 888' user               第一行上添加
+sed '/a/i 888' user             有a的行上添加
+sed 'a 888' user                所有行下添加888
+sed '1a 888' user               第一行下添加
+sed '2i 888' user               效果同上
+sed 'c 888' user                 所有行替换为888
+sed '1c 888' user	              把第一行替换
+sed '/QQQ/a\XXX' test_sed 在查找匹配包含QQQ关键子的一行下,插入一行XXX
+sed '/QQQ/a\XXX\nYYY' test_sed 连续插入两行XXX YYY
+
+
+awk 选项   (条件)指令   被处理的文件
+前置指令 | awk 选项   (条件)指令
+选项  -F 定义分隔符 指令 print 
+awk变量  
+$n  指定分隔的第n个字段如:$1 $2 $3....
+$0 当前读入的整行文本内容
+NF记录当前处理行的字段个数(列数)
+NR记录当前处读入行的数量(行数)
+
+
+awk '{print}' /etc/passwd        输出所有行
+awk '{print $1}' /etc/passwd     输出所有行的第1列
+awk '{print $2}' /etc/passwd     输出所有行的第1列
+awk '{print $1 $2}' /etc/passwd   输出所有行的第1列第2列
+awk '{print $0}' /etc/passwd      输出所有列
+awk '{print $1,$0}' /etc/passwd   输出第一列后 再输出所有列
+awk -F/ '{print $3}' /etc/passwd     使用/做分隔符,输出第3列
+awk -F[:/] '{print $9}' /etc/passwd  使用:或/做分隔符,输出第9列
+awk -F: '{print $1"的解释器是"$7}' /etc/passwd  变量+常量组合输出
+awk -F: '{print $1"的UID是"$3}' /etc/passwd
+asw '/正则/{print 字段}' 文件
+free | asw '/Men/{print $4}'
+ifconfig eth0 | asw '/RX p/{print $5}' 
+awk '{printf("%d,%s\n",NR,$0)}' filename //显示每行行号
+awk -F: '{if($3%2!=0) next; print $1,$3}' 1.txt //提前结束对本行的处理而直接进入下一行
+
+awk过滤的时机: 
+
+在所有行前处理,BEGIN{任务} #执行1次
+--读入第一行文本之前执行
+-一般用来初始化操作
+逐行处理,{任务} #执行N次
+-逐行读入文本执行相应的处理
+-是最常见的编辑指令块
+在所有行后处理,END{任务} #执行1次
+-处理完最后一行文本之后执行
+-一般用来输出处理结果
+#综合以上可单独使用,也可以同时一起使用.
+
+awk 'BEGIN{x=10;print x}'   定义变量,然后输出变量,执行1次
+awk '{x=10;print x}' /etc/passwd   执行多次
+awk 'END{x=10;print x}' /etc/passwd   执行1次
+awk 'BEGIN{print NR}' /etc/passwd   显示行号,由于在逐行任务之前,显示0
+awk 'END{print NR}' /etc/passwd  显示行号,由于在逐行任务之后,显示最后一行的行号
+awk 'BEGIN{x=0}{x++}END{print x}' /etc/passwd  先定义变量,然后每一行将这个变量+1,最后输出变量
+
+awk的条件
+1,使用正则:
+/ 正则/       ~  包含      !~ 不包含
+awk '/^root/{print}' /etc/passwd    基本正则匹配
+awk '/^root|^bin/{print}' /etc/passwd    扩展正则匹配
+awk -F: '$1~/root/{print}' /etc/passwd   找第1列包含root的行
+awk -F: '$1!~/root/{print}' /etc/passwd  找第1列不包含root的行
+awk -F: '$1!~/root/' user                任务仅仅是{print}时,可以省略不写
+awk -F: '$1~/root/{print $1}' /etc/passwd   针对具体列输出不能省略
+------------------------------
+2,使用数字或字符串
+ ==  !=   >   <    >=   <=
+awk 'NR==2{print}' user        输出第2行
+awk 'NR==2' user 		      简写,效果同上
+awk 'NR<4' user                找1~3行
+awk 'NR<=3' user 	             效果同上
+awk -F: '$1=="root"{print}' user   找第1列必须等于root的
+awk -F: '$1~/root/{print}' user   找第1列包含root的
+awk -F: '$1!="root"{print}' user  找第1列不等于root的
+awk -F: '$3==0{print}' /etc/passwd    找uid等于0的
+awk -F: '$3==0{print $1}' user   找uid等于0的,在输出第一列
+
+按 "用户名 --- 家目录 ---解释器" 输出服务器中所有的普通用户信息
+awk -F: '$3>=1000{print $1"---"$6"---"$7}' /etc/passwd
+-----------------------
+3,逻辑测试条件
+ &&  前后条件都匹配     || 前后条件匹配之一
+awk -F: '$3>=1000&&$3<2000' /etc/passwd  找uid是大于等于1000并且小于2000的
+awk -F: '$3<10||$3>1000' /etc/passwd  找uid是小于10或者大于1000的
+awk -F: '$3<10&&$3>1000' /etc/passwd   逻辑错误,什么都没有
+awk 'NR>=2&&NR<=4' user  找2~4行
+
+awk
+分支结构
+awk '{if(){}else{}}END{}' files
+单分支
+-if(条件){编辑指令}
+双分支
+-if(条件){编辑指令1}else(条件){编辑指令2}
+多分支
+-if(条件){编辑指令1}else if(条件){编辑指令2}...else{编辑指令N}
+awk -F: '{if($3<=1000){i++}}END{print i}' /etc/passwd
+awk -F: '{if($7~/bash$/){i++}}END{print i}'  /etc/passwd
+awk -F: '{if($3<=1000){i++}else{j++}}END{print i,j}' /etc/passwd
+
+awk数组
+1）数组的语法格式
+数组是一个可以存储多个值的变量，具体使用的格式如下：
+定义数组的格式：数组名[下标]=元素值
+调用数组的格式：数组名[下标]
+遍历数组的用法：for(变量 in 数组名){print 数组名[变量]}。
+
+awk 'BEGIN{a[1]=100;a[2]=200;print a[1]}'
+awk 'BEGIN{a["a"]=100;a["b"]=200;print a["a"]}'
+awk 'BEGIN{a["192.168.0.1"]=100;a["192.168.0.2"]=200;print a["192.168.0.2"]}'
+
+awk数组中使用for循环遍历数组
+for(变量名称 in 数组名称){执行指令}
+awk 'BEGIN{}{}'
+awk 'BEGIN{abc[1]=100;abc[2]=200;for (i in abc){print i}}'
+awk 'BEGIN{abc[1]=100;abc[2]=200;for (i in abc){print abc[i]}}'
+awk 'BEGIN{abc[1]=100;abc[2]=200;for (i in abc){print i,abc[i]}}'
+awk 'BEGIN{abc["x"]=100;abc["y"]=200;abc["x"]=100;for (i in abc){print i,abc[i]}}'
+awk '{a[$1]++}END{for(i in a){print i}}' test1.txt
+awk '{a[$1]++}END{for(i in a){print i,a[i]}}' test1.txt 
+awk '{a[$1]++}END{for(i in a){print i,a[i]}}' /var/log/httpd/access_log
+awk '{ip[$1]++}END{for(i in ip){print ip[i],i}}' /var/log/httpd/access_log | sort -r -n
+
+awk 'BEGIN{abc[1]=10;abc[2]=20;print abc[1],abc[2]}'
+1
+2
+
+awk 'BEGIN{abc[1]=10;abc[2]=20;for(i in abc){print abc[i]}}'
+10
+20
+总结:for 循环在遍历数组时的变量是下标,而不是值!
+
